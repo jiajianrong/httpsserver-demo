@@ -1,36 +1,43 @@
 var https = require('https');
 var fs = require('fs');
 
-var pk = fs.readFileSync('privatekey.pem'),
-    pc = fs.readFileSync('certificate.crt');
-
 var opts = {
-    key: pk,
-    cert: pc
+    key: fs.readFileSync('private.key'),
+    cert: fs.readFileSync('public.crt')
 };
 
 var server = https.createServer(opts, (req, res)=> {
-    res.end('hello')
+    res.end('hello https!')
 });
-server.listen(443)
+server.listen(8088)
 
 /*
 
 创建公钥、私钥及证书
-（1）创建私钥
+（1）创建私钥，编码格式为pem：ASCII (Base64)
 
-openssl genrsa -out privatekey.pem 1024
+openssl genrsa -out private.key 1024
 
-（2）创建证书签名请求
 
-openssl req -new -key privatekey.pem -out certrequest.csr
+（2）创建证书签名请求(Certificate sign request)：
+创建自签名证书时此步可以忽略
 
-（3）获取证书，线上证书需要经过证书授证中心签名的文件；下面只创建一个学习使用证书
+openssl req -new -key private.key -out certrequest.csr
 
-openssl x509 -req -in certrequest.csr -signkey privatekey.pem -out certificate.pem
 
-（4）创建pfx文件
+（3）获取证书，线上证书需要经过证书授证中心签名的文件；
+下面只创建一个学习使用证书；证书格式为X.509；
 
-openssl pkcs12 -export -in certificate.pem -inkey privatekey.pem -out certificate.pfx
+openssl x509 -req -in certrequest.csr -signkey private.key -out public.crt
+
+
+（4）也可以跳过前两步，直接创建证书
+
+openssl req -new -x509 -sha256 -key private.key -out public.crt -days 3650
+
+
+（5）创建pfx文件，可以忽略
+
+openssl pkcs12 -export -in public.crt -inkey private.key -out certificate.pfx
 
 */
